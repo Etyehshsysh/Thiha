@@ -21,17 +21,17 @@
             padding: 20px;
         }
         h2 {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #58a6ff;
             font-size: 22px;
         }
-        /* Scanner Visual Area */
+        /* Real Camera Video Container */
         .scanner-container {
             width: 280px;
             height: 280px;
             border: 2px solid #30363d;
             border-radius: 16px;
-            background: #161b22;
+            background: #000000;
             position: relative;
             display: flex;
             align-items: center;
@@ -40,6 +40,11 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             cursor: pointer;
         }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         .scan-line {
             width: 100%;
             height: 3px;
@@ -47,19 +52,15 @@
             box-shadow: 0 0 10px #238636;
             position: absolute;
             animation: scanAnimation 2s infinite alternate ease-in-out;
+            z-index: 2;
         }
         @keyframes scanAnimation {
             0% { top: 10%; }
             100% { top: 90%; }
         }
-        .scanner-text {
-            color: #8b949e;
-            font-size: 14px;
-            pointer-events: none;
-        }
         /* Scan Button */
         .scan-btn {
-            margin-top: 30px;
+            margin-top: 25px;
             width: 280px;
             padding: 16px;
             font-size: 18px;
@@ -76,7 +77,7 @@
             transform: scale(0.98);
         }
 
-        /* Secret Modal Window (For Magician Only) */
+        /* Secret Modal Window (For Magician) */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -143,10 +144,10 @@
 
     <h2>Barcode Scanner</h2>
 
-    <!-- Scanner Box (3-Taps to open Secret Menu) -->
+    <!-- Live Camera Frame -->
     <div class="scanner-container" id="scannerArea">
+        <video id="webcam" autoplay playsinline muted></video>
         <div class="scan-line"></div>
-        <span class="scanner-text">Align Barcode Here</span>
     </div>
 
     <button class="scan-btn" onclick="executeScan()">SCAN BARCODE</button>
@@ -156,7 +157,6 @@
         <div class="modal-content">
             <h3 style="margin-top:0; color:#58a6ff;">Select Item (1 - 18)</h3>
             
-            <!-- 1 to 18 Quick Buttons -->
             <div class="grid-container">
                 <button class="num-btn" onclick="selectItem(1)">1</button>
                 <button class="num-btn" onclick="selectItem(2)">2</button>
@@ -178,7 +178,6 @@
                 <button class="num-btn" onclick="selectItem(18)">18</button>
             </div>
 
-            <!-- Custom Word Input Option -->
             <input type="text" id="customWord" class="custom-input" placeholder="Or type custom word...">
             <button class="scan-btn" style="width:100%; margin-top:0; margin-bottom:10px; padding:10px;" onclick="saveCustom()">Save Custom</button>
 
@@ -187,31 +186,32 @@
     </div>
 
     <script>
-        // Item List (၁ မှ ၁၈ အထိ ပစ္စည်းအမည်များ)
+        // ၁ မှ ၁၈ အထိ Item စာရင်း (စိတ်ကြိုက် ပြောင်းနိုင်သည်)
         const items = {
-            1: "Apple",
-            2: "Banana",
-            3: "Milk",
-            4: "Bread",
-            5: "Coffee",
-            6: "Tea",
-            7: "Sugar",
-            8: "Eggs",
-            9: "Cheese",
-            10: "Butter",
-            11: "Chocolate",
-            12: "Juice",
-            13: "Cookie",
-            14: "Cake",
-            15: "Pizza",
-            16: "Burger",
-            17: "Noodles",
-            18: "Ice Cream"
+            1: "Apple", 2: "Banana", 3: "Milk", 4: "Bread",
+            5: "Coffee", 6: "Tea", 7: "Sugar", 8: "Eggs",
+            9: "Cheese", 10: "Butter", 11: "Chocolate", 12: "Juice",
+            13: "Cookie", 14: "Cake", 15: "Pizza", 16: "Burger",
+            17: "Noodles", 18: "Ice Cream"
         };
 
-        let currentPrediction = "Milk"; // Default Prediction
+        let currentPrediction = "Milk"; 
 
-        // Secret Trigger: Scanner Box ကို ၃ ခါ ဆက်တိုက် နှိပ်ရင် Secret Menu ပွင့်မည်
+        // ဖုန်းရဲ့ အနောက်ကင်မရာ (Environment Camera) ကို တိုက်ရိုက် ပွင့်စေခြင်း
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" }
+                });
+                document.getElementById('webcam').srcObject = stream;
+            } catch (err) {
+                console.log("Camera access error: ", err);
+            }
+        }
+
+        window.onload = startCamera;
+
+        // Scanner Box ကို ၃ ခါ ဆက်တိုက် နှိပ်ရင် Secret Menu ပွင့်မည်
         let tapCount = 0;
         let tapTimer;
 
@@ -227,7 +227,6 @@
             }
         });
 
-        // 1 - 18 ခလုတ်တစ်ခုခုကို နှိပ်လိုက်သည့်အခါ
         function selectItem(num) {
             if (items[num]) {
                 currentPrediction = items[num];
@@ -235,7 +234,6 @@
             closeModal();
         }
 
-        // Custom စကားလုံး ရိုက်ထည့်ပြီး Save လုပ်သည့်အခါ
         function saveCustom() {
             let txt = document.getElementById('customWord').value.trim();
             if (txt !== "") {
@@ -249,11 +247,11 @@
             document.getElementById('customWord').value = '';
         }
 
-        // SCAN BARCODE နှိပ်လိုက်ပါက တိုက်ရိုက် Google Search သို့ သွားမည်
+        // SCAN BARCODE နှိပ်ပါက Google Search သို့ တိုက်ရိုက် လမ်းကြောင်းပြောင်းမည်
         function executeScan() {
             let searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(currentPrediction);
             window.location.href = searchUrl;
         }
     </script>
 </body>
-  </html>
+    </html>
