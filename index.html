@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Barcode Scanner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #0d1117;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #58a6ff;
+            font-size: 22px;
+        }
+        /* Scanner Visual Area */
+        .scanner-container {
+            width: 280px;
+            height: 280px;
+            border: 2px solid #30363d;
+            border-radius: 16px;
+            background: #161b22;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        .scan-line {
+            width: 100%;
+            height: 3px;
+            background: #238636;
+            box-shadow: 0 0 10px #238636;
+            position: absolute;
+            animation: scanAnimation 2s infinite alternate ease-in-out;
+        }
+        @keyframes scanAnimation {
+            0% { top: 10%; }
+            100% { top: 90%; }
+        }
+        .scanner-text {
+            color: #8b949e;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        /* Scan Button */
+        .scan-btn {
+            margin-top: 30px;
+            width: 280px;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #238636;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .scan-btn:active {
+            background-color: #2ea043;
+            transform: scale(0.98);
+        }
+
+        /* Secret Modal Window (For Magician Only) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #161b22;
+            border: 1px solid #30363d;
+            padding: 20px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .num-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #58a6ff;
+            padding: 12px 0;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .num-btn:active {
+            background: #1f6feb;
+            color: #fff;
+        }
+        .custom-input {
+            width: 100%;
+            padding: 10px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #fff;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 15px;
+        }
+        .close-btn {
+            background: #da3633;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Barcode Scanner</h2>
+
+    <!-- Scanner Box (3-Taps to open Secret Menu) -->
+    <div class="scanner-container" id="scannerArea">
+        <div class="scan-line"></div>
+        <span class="scanner-text">Align Barcode Here</span>
+    </div>
+
+    <button class="scan-btn" onclick="executeScan()">SCAN BARCODE</button>
+
+    <!-- Secret Setup Modal -->
+    <div class="modal-overlay" id="secretModal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:#58a6ff;">Select Item (1 - 18)</h3>
+            
+            <!-- 1 to 18 Quick Buttons -->
+            <div class="grid-container">
+                <button class="num-btn" onclick="selectItem(1)">1</button>
+                <button class="num-btn" onclick="selectItem(2)">2</button>
+                <button class="num-btn" onclick="selectItem(3)">3</button>
+                <button class="num-btn" onclick="selectItem(4)">4</button>
+                <button class="num-btn" onclick="selectItem(5)">5</button>
+                <button class="num-btn" onclick="selectItem(6)">6</button>
+                <button class="num-btn" onclick="selectItem(7)">7</button>
+                <button class="num-btn" onclick="selectItem(8)">8</button>
+                <button class="num-btn" onclick="selectItem(9)">9</button>
+                <button class="num-btn" onclick="selectItem(10)">10</button>
+                <button class="num-btn" onclick="selectItem(11)">11</button>
+                <button class="num-btn" onclick="selectItem(12)">12</button>
+                <button class="num-btn" onclick="selectItem(13)">13</button>
+                <button class="num-btn" onclick="selectItem(14)">14</button>
+                <button class="num-btn" onclick="selectItem(15)">15</button>
+                <button class="num-btn" onclick="selectItem(16)">16</button>
+                <button class="num-btn" onclick="selectItem(17)">17</button>
+                <button class="num-btn" onclick="selectItem(18)">18</button>
+            </div>
+
+            <!-- Custom Word Input Option -->
+            <input type="text" id="customWord" class="custom-input" placeholder="Or type custom word...">
+            <button class="scan-btn" style="width:100%; margin-top:0; margin-bottom:10px; padding:10px;" onclick="saveCustom()">Save Custom</button>
+
+            <button class="close-btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // Item List (၁ မှ ၁၈ အထိ ပစ္စည်းအမည်များ)
+        const items = {
+            1: "Apple",
+            2: "Banana",
+            3: "Milk",
+            4: "Bread",
+            5: "Coffee",
+            6: "Tea",
+            7: "Sugar",
+            8: "Eggs",
+            9: "Cheese",
+            10: "Butter",
+            11: "Chocolate",
+            12: "Juice",
+            13: "Cookie",
+            14: "Cake",
+            15: "Pizza",
+            16: "Burger",
+            17: "Noodles",
+            18: "Ice Cream"
+        };
+
+        let currentPrediction = "Milk"; // Default Prediction
+
+        // Secret Trigger: Scanner Box ကို ၃ ခါ ဆက်တိုက် နှိပ်ရင် Secret Menu ပွင့်မည်
+        let tapCount = 0;
+        let tapTimer;
+
+        document.getElementById('scannerArea').addEventListener('click', () => {
+            tapCount++;
+            clearTimeout(tapTimer);
+
+            if (tapCount === 3) {
+                document.getElementById('secretModal').style.display = 'flex';
+                tapCount = 0;
+            } else {
+                tapTimer = setTimeout(() => { tapCount = 0; }, 800);
+            }
+        });
+
+        // 1 - 18 ခလုတ်တစ်ခုခုကို နှိပ်လိုက်သည့်အခါ
+        function selectItem(num) {
+            if (items[num]) {
+                currentPrediction = items[num];
+            }
+            closeModal();
+        }
+
+        // Custom စကားလုံး ရိုက်ထည့်ပြီး Save လုပ်သည့်အခါ
+        function saveCustom() {
+            let txt = document.getElementById('customWord').value.trim();
+            if (txt !== "") {
+                currentPrediction = txt;
+            }
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('secretModal').style.display = 'none';
+            document.getElementById('customWord').value = '';
+        }
+
+        // SCAN BARCODE နှိပ်လိုက်ပါက တိုက်ရိုက် Google Search သို့ သွားမည်
+        function executeScan() {
+            let searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(currentPrediction);
+            window.location.href = searchUrl;
+        }
+    </script>
+</body>
+  </html>
